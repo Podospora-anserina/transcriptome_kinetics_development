@@ -1,16 +1,22 @@
+# List of genes which are annotated as coding for transcription factors
 TFs <- as.vector(as.matrix(read.table("list_TF_podo.txt")))
                  
-# Lecture des profils d'expression des gènes
+# Gene expression profiles for all genes, and only for TF genes
 expData <- as.matrix(read.table("data_all_genes.txt", 
                       header = T, sep = "\t"))
 expDataTF <- expData[TFs,]
+
+# Threshold to create the transcriptional network
 T = 0.95
 
+# List of edges
 edgeList <- NULL
 
+# Waves information
 waves <- c("I", "II", "III", "IV", "V")
 colorW <- c("grey", "red", "orange", "green", "blue")
 
+# Search for putative targets for each TF
 for(i in 1:length(TFs)){
   tf <- TFs[i]
   
@@ -30,6 +36,7 @@ edgeList <- edgeList[!(edgeList[,1] == edgeList[,2]),]
 colnames(edgeList) <- c("TF", "target", "Cor", "Wave")
 sort(table(edgeList[,1]), decreasing = TRUE)
 
+# Get additional information for target genes
 geneInfo <- read.csv("gene_infos.csv",
                      header = T, row.names = 1)
 
@@ -40,9 +47,11 @@ allRes <- cbind(edgeList, tfInfo, targetInfo)
 colnames(allRes)[5:8] <- c("tf_name", "tf_description",
                            "target_name", "target_description")
 
+# Export the results
 write.table(allRes, file = paste0("TRN_cor", T, ".txt"),
             sep = "\t", quote = F, row.names = F)
 
+# This part of the script allows to create a graphical representation of the network
 library(igraph)
 TFnet = graph_from_edgelist(edgeList[,1:2], directed = F)
 plot.igraph(TFnet, vertex.color = "red", vertex.size = 2, 
